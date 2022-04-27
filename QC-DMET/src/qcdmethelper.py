@@ -21,7 +21,7 @@ import localintegrals
 import rhf
 import numpy as np
 import ctypes
-lib_qcdmet = ctypes.CDLL('../lib/libqcdmet.so')
+lib_qcdmet = ctypes.CDLL('QC-DMET/lib/libqcdmet.so')
 
 class qcdmethelper:
 
@@ -29,7 +29,7 @@ class qcdmethelper:
 
         self.locints = theLocalIntegrals
         assert( self.locints.Nelec % 2 == 0 )
-        self.numPairs = self.locints.Nelec / 2
+        self.numPairs = self.locints.Nelec // 2
         self.altcf = altcf
         self.minFunc = None
 
@@ -121,14 +121,14 @@ class qcdmethelper:
         #print "SP gap =", eigenvals[myNumPairs] - eigenvals[myNumPairs-1]
         return OneDM
 
-    def constructbath( self, OneDM, impurityOrbs, numBathOrbs, threshold=1e-13 ):
+    def constructbath( self, OneDM, impurityOrbs, numBathOrbs, threshold=1e-13 ):#对环境部分的密度矩阵做本征值分解，取本征值在0-1之间的态组成bath，根据麦当劳定理这一部分是和杂质有关联的部分
 
-        embeddingOrbs = 1 - impurityOrbs
+        embeddingOrbs = 1 - impurityOrbs# 不是杂志轨道就是嵌入轨道
         embeddingOrbs = np.matrix( embeddingOrbs )
-        if (embeddingOrbs.shape[0] > 1):
+        if (embeddingOrbs.shape[0] > 1):#转成长条矩阵
             embeddingOrbs = embeddingOrbs.T # Now certainly row-like matrix (shape = 1 x len(vector))
-        isEmbedding = np.dot( embeddingOrbs.T , embeddingOrbs ) == 1
-        numEmbedOrbs = np.sum( embeddingOrbs )
+        isEmbedding = np.dot( embeddingOrbs.T , embeddingOrbs ) == 1#选出环境维度的蒙版
+        numEmbedOrbs = np.sum( embeddingOrbs )#总轨道数目减去杂质轨道
         embedding1RDM = np.reshape( OneDM[ isEmbedding ], ( numEmbedOrbs , numEmbedOrbs ) )
 
         numImpOrbs   = np.sum( impurityOrbs )
@@ -142,13 +142,16 @@ class qcdmethelper:
         numBathOrbs = min(np.sum( tokeep ), numBathOrbs)
         eigenvals = eigenvals[idx]
         eigenvecs = eigenvecs[:,idx]
+        #eigenvals，eigenvecs安装能量最靠近1排序
         pureEnvironEigVals = -eigenvals[numBathOrbs:]
         pureEnvironEigVecs = eigenvecs[:,numBathOrbs:]
         idx = pureEnvironEigVals.argsort()
         eigenvecs[:,numBathOrbs:] = pureEnvironEigVecs[:,idx]
+        #eigenvals，eigenvecs安装能量最靠近1排序，eigenvecs环境部分按能能量逆序排序
         pureEnvironEigVals = -pureEnvironEigVals[idx]
         coreOccupations = np.hstack(( np.zeros([ numImpOrbs + numBathOrbs ]), pureEnvironEigVals ))
 
+        #拼装矩阵（坐上杂质方阵，右下长条阵）
         for counter in range(0, numImpOrbs):
             eigenvecs = np.insert(eigenvecs, counter, 0.0, axis=1) #Stack columns with zeros in the beginning
         counter = 0
@@ -165,4 +168,6 @@ class qcdmethelper:
         # eigenvecs[ : , 0:numImpOrbs ]                      = impurity orbitals
         # eigenvecs[ : , numImpOrbs:numImpOrbs+numBathOrbs ] = bath orbitals
         # eigenvecs[ : , numImpOrbs+numBathOrbs: ]           = pure environment orbitals in decreasing order of occupation number
+        #eigenvecs 坐上是杂质单位阵，右下是环境(bath维度是在开始的两个)
+        #coreOccupations 是本征值，杂质和bath对应的部分是0，能量从大到小排序
         return ( numBathOrbs, eigenvecs, coreOccupations )

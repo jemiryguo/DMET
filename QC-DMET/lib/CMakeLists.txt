@@ -6,8 +6,8 @@ set (QC_DMET_EMAIL        "sebastianwouters@gmail.com")
 set (QC_DMET_URL          "https://github.com/sebwouters/qc-dmet")
 set (QC_DMET_LICENSE      "GNU General Public License, version 2")
 
-cmake_minimum_required (VERSION 2.8.11)
-set (CMAKE_VERBOSE_MAKEFILE OFF)
+cmake_minimum_required(VERSION 3.22)
+set (CMAKE_VERBOSE_MAKEFILE ON)
 
 # Whether or not to compile with MKL
 option (MKL "Compile using the MKL" OFF)
@@ -54,4 +54,3 @@ set_target_properties (clib_qcdmet PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_NAME "qcdmet")
-

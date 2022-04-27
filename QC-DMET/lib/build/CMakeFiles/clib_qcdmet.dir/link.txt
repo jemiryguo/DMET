@@ -1,0 +1,1 @@
+/usr/bin/gcc -fPIC  -fopenmp -shared -Wl,-soname,libqcdmet.so -o ../libqcdmet.so CMakeFiles/clib_qcdmet.dir/rhf_response.cc.o  /usr/lib/x86_64-linux-gnu/libmkl_intel_lp64.so /usr/lib/x86_64-linux-gnu/libmkl_intel_thread.so /usr/lib/x86_64-linux-gnu/libmkl_core.so /usr/lib/x86_64-linux-gnu/libiomp5.so -lm -ldl -lm -ldl -lstdc++ -lm 
